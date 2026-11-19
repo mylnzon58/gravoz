@@ -1,0 +1,144 @@
+{
+  "name": "gravoz",
+  "displayName": "Gravoz AI — Voz Gemini para Antigravity",
+  "description": "Reproductor nativo de voz inteligente en español e inglés para Google Antigravity IDE con Gemini 3.8 TTS en 3 niveles (Al grano, Normal, Técnico), memoria Elephant y control rápido.",
+  "version": "1.0.12",
+  "publisher": "mylnzon58",
+  "license": "MIT",
+  "icon": "assets/logo.png",
+  "sponsor": {
+    "url": "https://github.com/sponsors/mylnzon58"
+  },
+  "author": {
+    "name": "Juan Jose Monzon (@mylnzon58)",
+    "url": "https://github.com/mylnzon58"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mylnzon58/gravoz.git"
+  },
+  "homepage": "https://mylnzon58.github.io/gravoz/",
+  "categories": [
+    "Other",
+    "Visualization",
+    "Machine Learning",
+    "Education"
+  ],
+  "keywords": [
+    "gravoz",
+    "gravoz ai",
+    "antigravity",
+    "gemini",
+    "tts",
+    "texto a voz",
+    "voz",
+    "voice",
+    "spanish",
+    "espanol",
+    "english",
+    "productividad",
+    "productivity",
+    "ai",
+    "narrator",
+    "accessibility"
+  ],
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=20.0.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gravoz",
+          "title": "Gravoz",
+          "icon": "assets/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "gravoz": [
+        {
+          "type": "webview",
+          "id": "gravoz.playerView",
+          "name": "Reproductor"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "gravoz.configureApiKey",
+        "title": "Gravoz: Configurar API Key de Google AI Studio"
+      },
+      {
+        "command": "gravoz.selectMode",
+        "title": "Gravoz: Cambiar nivel (Al grano / Normal / Técnico)"
+      },
+      {
+        "command": "gravoz.toggleAutoPlay",
+        "title": "Gravoz: Activar / Desactivar auto-reproducción"
+      },
+      {
+        "command": "gravoz.narrateSelection",
+        "title": "Gravoz: Explicar selección con voz"
+      },
+      {
+        "command": "gravoz.narrateLastTurn",
+        "title": "Gravoz: Escuchar última respuesta de Antigravity"
+      },
+      {
+        "command": "gravoz.openPanel",
+        "title": "Gravoz: Abrir panel y configuración"
+      },
+      {
+        "command": "gravoz.stopPlayback",
+        "title": "Gravoz: Detener reproducción"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "gravoz.narrateSelection",
+          "when": "editorHasSelection",
+          "group": "9_cutcopypaste@99"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "gravoz.narrateLastTurn",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g"
+      },
+      {
+        "command": "gravoz.narrateSelection",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e"
+      },
+      {
+        "command": "gravoz.stopPlayback",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s"
+      }
+    ]
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "node scripts/build.mjs",
+    "package": "npm run build && vsce package --allow-missing-repository",
+    "publish:openvsx": "npm run package && npx ovsx publish gravoz-1.0.6.vsix",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/*.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  }
+}
