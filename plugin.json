@@ -1,0 +1,21 @@
+{
+  "name": "gravoz",
+  "displayName": "Gravoz",
+  "version": "1.0.0",
+  "description": "Reproductor de voz inteligente para Google Antigravity: interpreta planes y respuestas con contexto del proyecto y los narra en español con voz nativa de Gemini en 3 niveles (Al grano, Normal, Técnico).",
+  "logo": "assets/logo.svg",
+  "author": {
+    "name": "mylnzon58",
+    "url": "https://github.com/mylnzon58"
+  },
+  "homepage": "https://mylnzon58.github.io/gravoz/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mylnzon58/gravoz"
+  },
+  "suggestedPrompts": [
+    "Narra el último plan en modo al grano",
+    "Cambia el modo de voz de Gravoz a técnico",
+    "Activa la reproducción automática en Gravoz"
+  ]
+}

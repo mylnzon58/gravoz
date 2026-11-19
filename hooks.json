@@ -1,0 +1,11 @@
+{
+  "gravoz-auto-narrate": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node dist/src/interfaces/stop-hook.js",
+        "timeout": 5
+      }
+    ]
+  }
+}

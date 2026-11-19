@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gravoz — Voz contextual con Gemini para Google Antigravity</title>
+    <meta
+      name="description"
+      content="Plugin open source para Google Antigravity que interpreta planes y respuestas con contexto de tu proyecto y los narra en español con voz nativa de Gemini."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Host+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./tokens.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="wordmark" href="#inicio">
+          <svg viewBox="0 0 128 128" fill="none" aria-hidden="true">
+            <rect x="12" y="12" width="104" height="104" rx="26" fill="currentColor" fill-opacity="0.08" />
+            <circle cx="64" cy="40" r="9" fill="var(--color-accent)" />
+            <path d="M36 74V62M48 84V52M60 92V48M72 86V54M84 78V60M92 72V66" stroke="currentColor" stroke-width="7" stroke-linecap="round" />
+          </svg>
+          <span>Gravoz</span>
+        </a>
+        <nav class="nav-links" aria-label="Navegación principal">
+          <a href="#instalar">Instalar</a>
+          <a href="#arquitectura">Arquitectura</a>
+          <a href="https://github.com/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="inicio">
+      <section class="hero">
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <h1>Escucha los planes de Antigravity con criterio técnico.</h1>
+            <p class="hero-lead">
+              Plugin open source que entiende tu proyecto y el hilo actual para narrar cada respuesta en español con voz nativa de Gemini.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="#instalar">Instalar en Antigravity</a>
+              <a class="btn" href="https://github.com/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">Ver código fuente</a>
+            </div>
+          </div>
+
+          <div class="console-stage" aria-label="Vista previa de los tres niveles de narración">
+            <div class="console-top">
+              <span class="console-title">guion oral generado</span>
+              <div class="mode-tabs" role="tablist" aria-label="Nivel de detalle">
+                <button class="mode-tab" role="tab" aria-selected="false" data-mode="al-grano" type="button">Al grano</button>
+                <button class="mode-tab" role="tab" aria-selected="true" data-mode="normal" type="button">Normal</button>
+                <button class="mode-tab" role="tab" aria-selected="false" data-mode="tecnico" type="button">Técnico</button>
+              </div>
+            </div>
+
+            <p id="demo-script" class="script-output">
+              Se terminó de estructurar el servidor local de Gravoz en el puerto de loopback y se validó la codificación WAV en memoria para evitar dependencias externas. El siguiente paso es instalar el paquete en tu carpeta de plugins y pegar tu clave gratuita de Google AI Studio.
+            </p>
+
+            <div class="console-foot">
+              <span id="demo-meta">modo normal / voz Kore / 45 a 80 segundos</span>
+              <span class="wave-bars" aria-hidden="true">
+                <span style="height: 8px"></span>
+                <span style="height: 15px"></span>
+                <span style="height: 11px"></span>
+                <span style="height: 18px"></span>
+                <span style="height: 10px"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="instalar" class="band">
+        <div class="wrap">
+          <div class="band-head">
+            <h2>Instalación en menos de un minuto</h2>
+            <p>Compatible con Linux, macOS y Windows usando Node.js 20 o superior. Cero dependencias de runtime en producción.</p>
+          </div>
+
+          <div class="install-grid">
+            <div class="code-block">
+              <div class="code-head">
+                <span>Linux y macOS</span>
+                <button class="copy-btn" data-copy="cmd-unix" type="button">Copiar</button>
+              </div>
+              <pre id="cmd-unix">git clone https://github.com/mylnzon58/gravoz.git
+cd gravoz
+./scripts/install.sh</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-head">
+                <span>Windows (PowerShell)</span>
+                <button class="copy-btn" data-copy="cmd-win" type="button">Copiar</button>
+              </div>
+              <pre id="cmd-win">git clone https://github.com/mylnzon58/gravoz.git
+cd gravoz
+.\scripts\install.ps1</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="arquitectura" class="band">
+        <div class="wrap">
+          <div class="band-head">
+            <h2>Ingeniería limpia, sin caja negra</h2>
+            <p>Diseñado bajo principios SOLID, DRY, POLA y KISS con controles OWASP desde el primer commit.</p>
+          </div>
+
+          <div class="ledger">
+            <div class="ledger-row">
+              <div class="ledger-key">Disparo automático no bloqueante</div>
+              <p class="ledger-val">El hook Stop de Antigravity reenvía el evento al sidecar local y libera al agente en menos de 50 milisegundos.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Contexto real del proyecto</div>
+              <p class="ledger-val">Lee README, manifiestos, árbol raíz, artefactos de plan y la cola reciente de la transcripción JSONL antes de redactar el guion oral.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Audio nativo de Gemini sin ffmpeg</div>
+              <p class="ledger-val">Convierte la salida PCM de 24 kHz de gemini-2.5-flash-preview-tts a WAV estándar con una cabecera RIFF en TypeScript puro.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Seguridad local OWASP</div>
+              <p class="ledger-val">Servidor enlazado solo a 127.0.0.1, validación de Host y Origin contra DNS rebinding, token criptográfico por sesión y clave API guardada con permisos 0600.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Clave gratuita guiada</div>
+              <p class="ledger-val">Al abrir el panel lateral por primera vez, una guía de 3 pasos te ayuda a crear y verificar tu clave gratuita en Google AI Studio.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <span>Gravoz — Licencia MIT por @mylnzon58</span>
+        <div class="footer-links">
+          <a href="https://github.com/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">Repositorio</a>
+          <a href="https://github.com/mylnzon58/gravoz/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./site.js" defer></script>
+  </body>
+</html>

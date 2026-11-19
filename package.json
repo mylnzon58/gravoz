@@ -1,0 +1,30 @@
+{
+  "name": "gravoz",
+  "version": "1.0.0",
+  "description": "Context-aware Spanish voice narrator plugin for Google Antigravity powered by Gemini TTS.",
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "name": "mylnzon58",
+    "url": "https://github.com/mylnzon58"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mylnzon58/gravoz.git"
+  },
+  "homepage": "https://mylnzon58.github.io/gravoz/",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-ui.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "start": "node dist/src/interfaces/sidecar-main.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
