@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gravoz — Voz contextual con Gemini para Google Antigravity</title>
+    <meta
+      name="description"
+      content="Plugin open source para Google Antigravity que interpreta planes y respuestas con contexto de tu proyecto y los narra en español con voz nativa de Gemini."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Host+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./tokens.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="wordmark" href="#inicio">
+          <svg viewBox="0 0 128 128" fill="none" aria-hidden="true">
+            <rect x="12" y="12" width="104" height="104" rx="26" fill="currentColor" fill-opacity="0.08" />
+            <circle cx="64" cy="40" r="9" fill="var(--color-accent)" />
+            <path d="M36 74V62M48 84V52M60 92V48M72 86V54M84 78V60M92 72V66" stroke="currentColor" stroke-width="7" stroke-linecap="round" />
+          </svg>
+          <span>Gravoz AI</span>
+        </a>
+        <nav class="nav-links" aria-label="Navegación principal">
+          <a href="#capturas">Capturas</a>
+          <a href="#instalar">Instalar</a>
+          <a href="#arquitectura">Arquitectura</a>
+          <a href="#sponsors">Sponsors</a>
+          <a href="https://github.com/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="inicio">
+      <section class="hero">
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <h1>Escucha los planes de Antigravity con criterio técnico.</h1>
+            <p class="hero-lead">
+              Plugin open source que entiende tu proyecto y el hilo actual para narrar cada respuesta en español con voz nativa de Gemini.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="https://open-vsx.org/extension/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">Tienda Open VSX</a>
+              <a class="btn" href="https://github.com/mylnzon58/gravoz/releases/latest" target="_blank" rel="noopener noreferrer">Descargar .vsix</a>
+              <a class="btn" href="https://github.com/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+
+          <div class="console-stage" aria-label="Vista previa de los tres niveles de narración">
+            <div class="console-top">
+              <span class="console-title">guion oral generado</span>
+              <div class="mode-tabs" role="tablist" aria-label="Nivel de detalle">
+                <button class="mode-tab" role="tab" aria-selected="false" data-mode="al-grano" type="button">Al grano</button>
+                <button class="mode-tab" role="tab" aria-selected="true" data-mode="normal" type="button">Normal</button>
+                <button class="mode-tab" role="tab" aria-selected="false" data-mode="tecnico" type="button">Técnico</button>
+              </div>
+            </div>
+
+            <p id="demo-script" class="script-output">
+              La extensión nativa de Gravoz ya está integrada en la barra lateral de Antigravity IDE sin puertos abiertos ni dependencias externas. Solo queda pegar tu clave gratuita de Google AI Studio para escuchar cada plan con Gemini 3.8 Flash TTS.
+            </p>
+
+            <div class="console-foot">
+              <span id="demo-meta">modo normal / voz Kore / 45 a 80 segundos</span>
+              <span class="wave-bars" aria-hidden="true">
+                <span style="height: 8px"></span>
+                <span style="height: 15px"></span>
+                <span style="height: 11px"></span>
+                <span style="height: 18px"></span>
+                <span style="height: 10px"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="capturas" class="band">
+        <div class="wrap">
+          <div class="band-head">
+            <h2>Integrado en tu flujo dentro de Antigravity IDE</h2>
+            <p>Panel lateral nativo con los colores de tu tema y controles directos en la barra inferior para cambiar entre Automático y Manual en un clic.</p>
+          </div>
+
+          <div class="shot-grid">
+            <figure class="shot-figure">
+              <img
+                src="./assets/ide-preview.jpg"
+                alt="Gravoz integrado en Antigravity IDE mostrando el panel lateral con los niveles Al grano, Normal y Técnico, selector Automático o Manual, voz Gemini Kore, reproductor de audio y la barra inferior con el estado activo."
+                loading="lazy"
+              />
+              <figcaption>Vista real en Antigravity IDE: panel lateral nativo a la izquierda y controles rápidos de nivel y modo Automático o Manual en la barra inferior derecha.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="instalar" class="band">
+        <div class="wrap">
+          <div class="band-head">
+            <h2>Instalación en menos de un minuto</h2>
+            <p>Descarga el paquete <code>.vsix</code> desde Releases (sin compilar) o compila desde el código fuente en Linux, macOS y Windows.</p>
+          </div>
+
+          <div class="code-block" style="margin-bottom: var(--space-lg)">
+            <div class="code-head">
+              <span>Opción 1 (Recomendada): directo desde la tienda nativa de Antigravity IDE</span>
+              <a class="copy-btn" href="https://open-vsx.org/extension/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">Ver en Open VSX</a>
+            </div>
+            <pre>1. Abre la pestaña Extensiones (Ctrl+Shift+X) en Antigravity IDE
+2. Busca: gravoz  (o mylnzon58.gravoz)
+3. Pulsa Install
+4. Abre el icono de Gravoz y pega tu clave gratuita de aistudio.google.com/apikey</pre>
+          </div>
+
+          <div class="install-grid">
+            <div class="code-block">
+              <div class="code-head">
+                <span>Linux y macOS</span>
+                <button class="copy-btn" data-copy="cmd-unix" type="button">Copiar</button>
+              </div>
+              <pre id="cmd-unix">git clone https://github.com/mylnzon58/gravoz.git
+cd gravoz
+./scripts/install.sh</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-head">
+                <span>Windows (PowerShell)</span>
+                <button class="copy-btn" data-copy="cmd-win" type="button">Copiar</button>
+              </div>
+              <pre id="cmd-win">git clone https://github.com/mylnzon58/gravoz.git
+cd gravoz
+.\scripts\install.ps1</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="arquitectura" class="band">
+        <div class="wrap">
+          <div class="band-head">
+            <h2>Diseñado para programar sin perder el foco</h2>
+            <p>Todo ocurre dentro de tu editor con controles directos, baja latencia y almacenamiento local privado.</p>
+          </div>
+
+          <div class="ledger">
+            <div class="ledger-row">
+              <div class="ledger-key">Integración nativa en el IDE</div>
+              <p class="ledger-val">Panel lateral adaptado al tema de tu editor, controles rápidos en la barra inferior y atajos de teclado para escuchar o detener sin abrir paneles.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Tres niveles de profundidad y copia rápida</div>
+              <p class="ledger-val">Alterna en cualquier momento entre Al grano (15 a 30s), Normal (45 a 80s) o Técnico (90 a 150s), con caché instantánea y botón para copiar el resumen limpio en 1 clic.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Explicación de código con clic derecho</div>
+              <p class="ledger-val">Selecciona cualquier fragmento o función en el editor y usa «Gravoz: Explicar selección con voz» (Ctrl+Alt+E) para escucharlo conectado al contexto real de tu repositorio.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Contexto independiente y filtro inteligente</div>
+              <p class="ledger-val">Aísla las sesiones por proyecto cuando trabajas con varias ventanas abiertas, omite respuestas triviales de una línea en modo Automático y ofrece sugerencias opcionales desactivadas por defecto.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Ocho voces de estudio y gestión de cuota</div>
+              <p class="ledger-val">Voces femeninas y masculinas de Google Gemini en español e inglés con rotación automática de modelos y soporte para claves de respaldo opcionales.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Privacidad local</div>
+              <p class="ledger-val">Funciona directamente entre tu editor y tu cuenta de Google AI Studio, sin servidores intermedios ni telemetría externa.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sponsors" class="band">
+        <div class="wrap">
+          <div class="band-head">
+            <h2>Apoya el desarrollo open source</h2>
+            <p>Gravoz AI es libre y gratuito. Si te ahorra tiempo todos los días, puedes patrocinar el proyecto en GitHub Sponsors.</p>
+          </div>
+          <div style="display: flex; justify-content: center; width: 100%; overflow: hidden;">
+            <iframe
+              src="https://github.com/sponsors/mylnzon58/card"
+              title="Sponsor mylnzon58"
+              height="225"
+              width="600"
+              loading="lazy"
+              style="border: 0; max-width: 100%; border-radius: 10px;"
+            ></iframe>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <span>Gravoz AI — Licencia MIT por Juan Jose Monzon (@mylnzon58)</span>
+        <div class="footer-links">
+          <a href="https://github.com/sponsors/mylnzon58" target="_blank" rel="noopener noreferrer">GitHub Sponsors</a>
+          <a href="https://github.com/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">Dejar estrella en GitHub</a>
+          <a href="https://github.com/mylnzon58" target="_blank" rel="noopener noreferrer">Seguir a @mylnzon58</a>
+          <a href="https://tecito.app/juanjoclassic" target="_blank" rel="noopener noreferrer">Invitar un Tecito</a>
+          <a href="https://open-vsx.org/extension/mylnzon58/gravoz" target="_blank" rel="noopener noreferrer">Open VSX Store</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./site.js" defer></script>
+  </body>
+</html>
+

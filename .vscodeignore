@@ -1,0 +1,15 @@
+.git/**
+.gitignore
+.github/**
+docs/index.html
+docs/site.js
+docs/styles.css
+docs/tokens.css
+src/**
+tests/**
+scripts/**
+dist-test/**
+tsconfig*.json
+node_modules/**
+*.vsix
+*.log
