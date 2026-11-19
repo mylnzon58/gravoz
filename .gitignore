@@ -1,7 +1,8 @@
 node_modules/
 dist/
+dist-test/
+*.vsix
 *.log
 .DS_Store
 .env
 .env.*
-runtime.json

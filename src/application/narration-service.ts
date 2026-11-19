@@ -1,10 +1,9 @@
 /**
- * Core orchestration service for Gravoz: context-aware summarization, Gemini TTS,
+ * Core orchestration service for Gravoz: context-aware summarization, Gemini 3.8 TTS,
  * cancellation safety (AbortController + monotonic jobId), and bounded replay history.
  * Servicio orquestador principal de Gravoz con cancelación segura e historial acotado.
  */
 import { randomUUID } from "node:crypto";
-import { buildTtsPayloadText } from "../domain/prompts.js";
 import {
   toPublicConfig,
   type AudioPlayerPort,
@@ -15,10 +14,10 @@ import {
   type ParsedTranscript,
   type ProjectContext,
   type PublicConfig,
-  type SidecarEvent,
   type StopHookPayload,
   type SummarizerPort,
   type TtsPort,
+  type UiEvent,
 } from "../domain/types.js";
 import type { ConfigStore } from "../infrastructure/config-store.js";
 import type { ContextCollector } from "../infrastructure/context-collector.js";
@@ -39,8 +38,8 @@ export interface NarrationServiceDeps {
   readonly summarizer: SummarizerPort;
   readonly tts: TtsPort;
   readonly osPlayer: AudioPlayerPort;
-  readonly hasUiSubscribers: () => boolean;
-  readonly broadcast: (event: SidecarEvent) => void;
+  readonly hasActiveWebview: () => boolean;
+  readonly emit: (event: UiEvent) => void;
 }
 
 export class NarrationService {
@@ -62,7 +61,7 @@ export class NarrationService {
   public updateConfig(patch: Partial<GravozConfig>): PublicConfig {
     const updated = this.deps.configStore.update(patch);
     const pub = toPublicConfig(updated);
-    this.deps.broadcast({ type: "config", config: pub });
+    this.deps.emit({ type: "config", config: pub });
     return pub;
   }
 
@@ -94,9 +93,9 @@ export class NarrationService {
     };
   }
 
-  public getAudioBuffer(id: string): Buffer | null {
+  public getAudioBase64(id: string): string | null {
     const found = this.history.find((item) => item.entry.id === id);
-    return found ? found.wav : null;
+    return found ? found.wav.toString("base64") : null;
   }
 
   public stopPlayback(): void {
@@ -151,8 +150,8 @@ export class NarrationService {
     return { accepted: true };
   }
 
-  /** Narrates explicit text on demand (from UI or MCP tool). */
-  /** Narra texto explícito bajo demanda (desde la UI o la herramienta MCP). */
+  /** Narrates explicit text on demand (selected editor text or manual input). */
+  /** Narra texto explícito bajo demanda (texto seleccionado en el editor o entrada manual). */
   public async narrateText(input: {
     readonly text: string;
     readonly mode?: NarrationMode;
@@ -220,7 +219,7 @@ export class NarrationService {
   private emitStatus(phase: NarrationPhase, message: string): void {
     this.phase = phase;
     this.lastMessage = message;
-    this.deps.broadcast({ type: "status", phase, message });
+    this.deps.emit({ type: "status", phase, message });
   }
 
   private async runNarrationJob(params: {
@@ -251,12 +250,11 @@ export class NarrationService {
       if (jobId !== this.currentJobId) return null;
 
       this.emitStatus("synthesizing", `Sintetizando voz Gemini (${params.config.voiceName})…`);
-      const ttsText = buildTtsPayloadText(script, params.mode);
       const rawTts = await this.deps.tts.synthesize({
         apiKey: params.config.apiKey,
         model: params.config.ttsModel,
         voiceName: params.config.voiceName,
-        text: ttsText,
+        text: script,
         signal: controller.signal,
       });
 
@@ -284,19 +282,20 @@ export class NarrationService {
 
       this.phase = "ready";
       this.lastMessage = "Listo para reproducir.";
-      this.deps.broadcast({
+      this.deps.emit({
         type: "narration",
         phase: "ready",
         entry,
+        audioBase64: wav.toString("base64"),
         autoPlay: params.triggerAutoPlay,
       });
 
-      // Headless fallback: if no browser/sidecar UI is open, play via native OS player.
-      // Respaldo sin interfaz: si no hay UI conectada, reproduce mediante el reproductor del SO.
+      // Headless fallback: if the sidebar webview is hidden/closed, play via native OS audio.
+      // Respaldo nativo: si el panel lateral está cerrado, reproduce mediante el reproductor del SO.
       if (
         params.triggerAutoPlay &&
         params.config.headlessFallback &&
-        !this.deps.hasUiSubscribers()
+        !this.deps.hasActiveWebview()
       ) {
         this.deps.osPlayer.playWav(wav).catch(() => {
           // Silently ignore headless audio errors when no audio device is available.
@@ -311,7 +310,7 @@ export class NarrationService {
       const message = err instanceof Error ? err.message : "Error inesperado al narrar.";
       this.phase = "error";
       this.lastMessage = message;
-      this.deps.broadcast({ type: "error", phase: "error", message });
+      this.deps.emit({ type: "error", phase: "error", message });
       return null;
     } finally {
       if (this.activeAbort === controller) {

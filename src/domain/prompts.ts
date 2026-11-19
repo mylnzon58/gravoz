@@ -114,14 +114,3 @@ export function sanitizeSpokenScript(raw: string, mode: NarrationMode): string {
   return lastPeriod > maxChars * 0.6 ? sliced.slice(0, lastPeriod + 1).trim() : `${sliced.trim()}...`;
 }
 
-/** Wraps the spoken script with subtle Spanish prosody direction for Gemini TTS. */
-/** Envuelve el guion con una directiva breve de prosodia en español para Gemini TTS. */
-export function buildTtsPayloadText(script: string, mode: NarrationMode): string {
-  const style =
-    mode === "al-grano"
-      ? "Lee en español con voz clara, ágil y directa, a ritmo natural:"
-      : mode === "tecnico"
-        ? "Lee en español con voz profesional, pausada y clara, como un ingeniero explicando una arquitectura:"
-        : "Lee en español con voz cálida, natural y clara, a ritmo conversacional:";
-  return `${style}\n\n${script}`;
-}

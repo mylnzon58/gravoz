@@ -83,3 +83,4 @@ export function ensureWavBuffer(rawAudio: Buffer, mimeType: string): {
   const durationSec = byteRate > 0 ? Math.max(1, Math.round(dataSize / byteRate)) : 1;
   return { wav, durationSec };
 }
+

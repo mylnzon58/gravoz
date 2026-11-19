@@ -1,9 +1,17 @@
 /**
- * Zero-dependency HTTPS client for Google Gemini (Summarization + Native TTS).
- * Cliente HTTPS sin dependencias para Google Gemini (Resumen contextual + Voz nativa TTS).
+ * Zero-dependency HTTPS client for Google Gemini 3.8 (Summarization + Native TTS).
+ * Cliente HTTPS sin dependencias para Google Gemini 3.8 (Resumen contextual + Voz nativa TTS).
  */
-import { buildSummarizationPrompt, buildTtsPayloadText, sanitizeSpokenScript } from "../domain/prompts.js";
-import type { GeminiVoice, NarrationMode, ParsedTranscript, ProjectContext, SummarizerPort, TtsPort } from "../domain/types.js";
+import { buildSummarizationPrompt, sanitizeSpokenScript } from "../domain/prompts.js";
+import {
+  FALLBACK_TTS_MODEL,
+  type GeminiVoice,
+  type NarrationMode,
+  type ParsedTranscript,
+  type ProjectContext,
+  type SummarizerPort,
+  type TtsPort,
+} from "../domain/types.js";
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 const SUMMARY_TIMEOUT_MS = 22_000;
@@ -29,6 +37,15 @@ interface GeminiResponseJson {
   };
 }
 
+class GeminiHttpError extends Error {
+  public readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 function linkTimeoutSignal(parent: AbortSignal, timeoutMs: number): {
   readonly signal: AbortSignal;
   readonly cleanup: () => void;
@@ -40,7 +57,7 @@ function linkTimeoutSignal(parent: AbortSignal, timeoutMs: number): {
   } else {
     parent.addEventListener("abort", onParentAbort, { once: true });
   }
-  const timer = setTimeout(() => controller.abort(new Error("Request timed out")), timeoutMs);
+  const timer = setTimeout(() => controller.abort(new Error("Tiempo de espera agotado con Gemini API")), timeoutMs);
   return {
     signal: controller.signal,
     cleanup: () => {
@@ -50,18 +67,18 @@ function linkTimeoutSignal(parent: AbortSignal, timeoutMs: number): {
   };
 }
 
-function mapGeminiHttpError(status: number, body?: GeminiResponseJson): Error {
+function mapGeminiHttpError(status: number, body?: GeminiResponseJson): GeminiHttpError {
   const detail = body?.error?.message ?? "";
   if (status === 400 && detail.toLowerCase().includes("api key")) {
-    return new Error("La API key de Google AI Studio no es válida. Revísala en Ajustes.");
+    return new GeminiHttpError(status, "La API key de Google AI Studio no es válida. Revísala en Ajustes.");
   }
   if (status === 401 || status === 403) {
-    return new Error("API key rechazada o sin permisos para Gemini. Verifica tu clave en Google AI Studio.");
+    return new GeminiHttpError(status, "API key rechazada o sin permisos para Gemini. Verifica tu clave en Google AI Studio.");
   }
   if (status === 429) {
-    return new Error("Límite gratuito de solicitudes de Gemini alcanzado (429). Espera unos segundos e intenta de nuevo.");
+    return new GeminiHttpError(status, "Límite gratuito de solicitudes de Gemini alcanzado (429). Espera unos segundos.");
   }
-  return new Error(`Error de Gemini API (${status})${detail ? `: ${detail}` : ""}`);
+  return new GeminiHttpError(status, `Error de Gemini API (${status})${detail ? `: ${detail}` : ""}`);
 }
 
 export class GeminiClient implements SummarizerPort, TtsPort {
@@ -147,25 +164,48 @@ export class GeminiClient implements SummarizerPort, TtsPort {
     readonly text: string;
     readonly signal: AbortSignal;
   }): Promise<{ readonly audio: Buffer; readonly mimeType: string }> {
-    const json = await this.postGenerateContent({
-      apiKey: input.apiKey,
-      model: input.model,
-      timeoutMs: TTS_TIMEOUT_MS,
-      parentSignal: input.signal,
-      payload: {
-        contents: [{ parts: [{ text: input.text }] }],
-        generationConfig: {
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: input.voiceName,
-              },
+    const payload: Record<string, unknown> = {
+      contents: [{ parts: [{ text: input.text }] }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: input.voiceName,
             },
           },
         },
       },
-    });
+    };
+
+    let json: GeminiResponseJson;
+    try {
+      json = await this.postGenerateContent({
+        apiKey: input.apiKey,
+        model: input.model,
+        timeoutMs: TTS_TIMEOUT_MS,
+        parentSignal: input.signal,
+        payload,
+      });
+    } catch (err) {
+      // Automatic fallback to Gemini 3.8 Flash-Lite TTS on 404 or 429 quota pressure.
+      // Respaldo automático a Gemini 3.8 Flash-Lite TTS ante 404 o cuota 429.
+      if (
+        err instanceof GeminiHttpError &&
+        (err.status === 404 || err.status === 429) &&
+        input.model !== FALLBACK_TTS_MODEL
+      ) {
+        json = await this.postGenerateContent({
+          apiKey: input.apiKey,
+          model: FALLBACK_TTS_MODEL,
+          timeoutMs: TTS_TIMEOUT_MS,
+          parentSignal: input.signal,
+          payload,
+        });
+      } else {
+        throw err;
+      }
+    }
 
     const parts = json.candidates?.[0]?.content?.parts ?? [];
     const audioPart = parts.find((part) => part.inlineData?.data);
@@ -191,12 +231,10 @@ export class GeminiClient implements SummarizerPort, TtsPort {
       timeoutMs: VERIFY_TIMEOUT_MS,
       parentSignal: signal,
       payload: {
-        contents: [{ parts: [{ text: "Responde solo: OK" }] }],
+        contents: [{ parts: [{ text: "OK" }] }],
         generationConfig: { maxOutputTokens: 8, temperature: 0 },
       },
     });
     return true;
   }
 }
-
-export { buildTtsPayloadText };

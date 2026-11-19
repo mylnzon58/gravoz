@@ -1,0 +1,11 @@
+.git/**
+.gitignore
+docs/**
+src/**
+tests/**
+scripts/**
+dist-test/**
+tsconfig*.json
+node_modules/**
+*.vsix
+*.log

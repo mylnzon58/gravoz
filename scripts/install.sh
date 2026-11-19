@@ -1,29 +1,26 @@
 #!/usr/bin/env bash
-# Cross-platform installer for Linux & macOS — installs Gravoz into ~/.gemini/config/plugins/gravoz
+# Installer for Linux & macOS — builds and installs Gravoz natively into Antigravity IDE.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET_DIR="${HOME}/.gemini/config/plugins/gravoz"
-
-echo "[gravoz] Compilando TypeScript..."
 cd "${REPO_DIR}"
+
+echo "[gravoz] Instalando dependencias de compilación y empaquetando extensión nativa (.vsix)..."
 npm ci --no-audit --no-fund >/dev/null 2>&1 || npm install --no-audit --no-fund
-npm run build
+npm run package
 
-echo "[gravoz] Instalando plugin en ${TARGET_DIR}..."
-rm -rf "${TARGET_DIR}"
-mkdir -p "${TARGET_DIR}"
+VSIX_FILE="$(ls -t "${REPO_DIR}"/gravoz-*.vsix | head -n 1)"
 
-cp -R \
-  plugin.json \
-  hooks.json \
-  mcp_config.json \
-  LICENSE \
-  README.md \
-  assets \
-  sidecars \
-  skills \
-  dist \
-  "${TARGET_DIR}/"
+if command -v antigravity-ide >/dev/null 2>&1; then
+  antigravity-ide --install-extension "${VSIX_FILE}" --force
+elif [[ -x "/opt/antigravity/bin/antigravity-ide" ]]; then
+  /opt/antigravity/bin/antigravity-ide --install-extension "${VSIX_FILE}" --force
+elif command -v antigravity >/dev/null 2>&1; then
+  antigravity --install-extension "${VSIX_FILE}" --force
+else
+  echo "[gravoz] Paquete listo en: ${VSIX_FILE}"
+  echo "[gravoz] Instálalo desde Antigravity IDE: Extensiones (...) -> Install from VSIX."
+  exit 0
+fi
 
-echo "[gravoz] Listo. Reinicia o recarga tus plugins en Antigravity y abre el panel lateral de Gravoz."
+echo "[gravoz] Extensión instalada en Antigravity IDE. Recarga la ventana (Ctrl+Shift+P -> Developer: Reload Window)."

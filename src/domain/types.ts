@@ -22,6 +22,10 @@ export const GEMINI_VOICES = [
 
 export type GeminiVoice = (typeof GEMINI_VOICES)[number];
 
+export const DEFAULT_SUMMARY_MODEL = "gemini-3.8-flash";
+export const DEFAULT_TTS_MODEL = "gemini-3.8-flash-tts";
+export const FALLBACK_TTS_MODEL = "gemini-3.8-flash-lite-tts";
+
 export interface GravozConfig {
   readonly apiKey: string;
   readonly mode: NarrationMode;
@@ -54,8 +58,8 @@ export const DEFAULT_CONFIG: GravozConfig = {
   headlessFallback: true,
   voiceName: "Kore",
   playbackRate: 1.0,
-  summaryModel: "gemini-2.5-flash",
-  ttsModel: "gemini-2.5-flash-preview-tts",
+  summaryModel: DEFAULT_SUMMARY_MODEL,
+  ttsModel: DEFAULT_TTS_MODEL,
 };
 
 export interface StopHookPayload {
@@ -103,20 +107,14 @@ export interface NarrationEntry {
   readonly durationEstimateSec: number;
 }
 
-export interface SidecarEvent {
+export interface UiEvent {
   readonly type: "status" | "narration" | "config" | "error";
   readonly phase?: NarrationPhase;
   readonly message?: string;
   readonly entry?: NarrationEntry;
+  readonly audioBase64?: string;
   readonly config?: PublicConfig;
   readonly autoPlay?: boolean;
-}
-
-export interface RuntimeDescriptor {
-  readonly pid: number;
-  readonly port: number;
-  readonly token: string;
-  readonly startedAt: string;
 }
 
 /** Narrow ports for dependency inversion and deterministic testing. */

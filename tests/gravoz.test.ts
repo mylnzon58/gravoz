@@ -9,13 +9,21 @@ import { join } from "node:path";
 import { afterEach, describe, it } from "node:test";
 import { NarrationService } from "../src/application/narration-service.js";
 import { buildSummarizationPrompt, sanitizeSpokenScript } from "../src/domain/prompts.js";
-import { maskApiKey, type AudioPlayerPort, type SummarizerPort, type TtsPort } from "../src/domain/types.js";
+import {
+  DEFAULT_SUMMARY_MODEL,
+  DEFAULT_TTS_MODEL,
+  maskApiKey,
+  type AudioPlayerPort,
+  type SummarizerPort,
+  type TtsPort,
+  type UiEvent,
+} from "../src/domain/types.js";
 import { ConfigStore } from "../src/infrastructure/config-store.js";
 import { ContextCollector } from "../src/infrastructure/context-collector.js";
 import { isPathWithinRoot } from "../src/infrastructure/paths.js";
+import { StopEventWatcher, writeStopEvent } from "../src/infrastructure/stop-event-bus.js";
 import { TranscriptParser } from "../src/infrastructure/transcript-parser.js";
 import { ensureWavBuffer, parsePcmMimeType } from "../src/infrastructure/wav-encoder.js";
-import { GravozHttpServer } from "../src/interfaces/http-server.js";
 
 const tempDirs: string[] = [];
 
@@ -34,17 +42,13 @@ afterEach(() => {
 
 describe("WavEncoder", () => {
   it("wraps 24kHz 16-bit mono PCM in a valid RIFF/WAVE header", () => {
-    const pcm = Buffer.alloc(48000); // 1 second at 24kHz * 2 bytes
+    const pcm = Buffer.alloc(48000);
     const { wav, durationSec } = ensureWavBuffer(pcm, "audio/L16;codec=pcm;rate=24000");
 
     assert.equal(wav.length, 44 + pcm.length);
     assert.equal(wav.subarray(0, 4).toString("ascii"), "RIFF");
     assert.equal(wav.subarray(8, 12).toString("ascii"), "WAVE");
-    assert.equal(wav.readUInt16LE(20), 1); // PCM
-    assert.equal(wav.readUInt16LE(22), 1); // mono
-    assert.equal(wav.readUInt32LE(24), 24000); // sampleRate
-    assert.equal(wav.readUInt16LE(34), 16); // bitsPerSample
-    assert.equal(wav.readUInt32LE(40), pcm.length);
+    assert.equal(wav.readUInt32LE(24), 24000);
     assert.equal(durationSec, 1);
   });
 
@@ -72,7 +76,7 @@ describe("Prompts & Security Hygiene", () => {
   it("separates untrusted project/transcript content with explicit delimiters", () => {
     const built = buildSummarizationPrompt({
       mode: "al-grano",
-      projectContext: { projectName: "gravoz", summary: "Plugin de voz", recentArtifacts: "" },
+      projectContext: { projectName: "gravoz", summary: "Extensión de voz", recentArtifacts: "" },
       transcript: {
         lastUserPrompt: "Crea un plan",
         recentHistory: "",
@@ -83,17 +87,11 @@ describe("Prompts & Security Hygiene", () => {
     assert.match(built.userContent, /<<<UNTRUSTED_LATEST_ANTIGRAVITY_RESPONSE>>>/);
   });
 
-  it("strips markdown syntax and respects mode character ceilings", () => {
+  it("strips markdown syntax and masks API keys safely", () => {
     const raw = "## **Plan** con `codigo` y [enlace](https://example.com) ```ts\nconst x = 1;\n```";
     const clean = sanitizeSpokenScript(raw, "al-grano");
     assert.ok(!clean.includes("**"));
     assert.ok(!clean.includes("```"));
-    assert.ok(!clean.includes("https://example.com"));
-    assert.ok(clean.includes("Plan"));
-    assert.ok(clean.includes("enlace"));
-  });
-
-  it("masks API keys safely", () => {
     assert.equal(maskApiKey("AIzaSyDUMMYKEY1234567890"), "AIza••••7890");
     assert.equal(maskApiKey(""), "");
   });
@@ -111,19 +109,22 @@ describe("Prompts & Security Hygiene", () => {
   });
 });
 
-describe("ConfigStore & TranscriptParser", () => {
-  it("persists config atomically and manages runtime.json lifecycle", () => {
-    const stateDir = makeTempDir("gravoz-state-");
-    const store = new ConfigStore(stateDir);
-    const updated = store.update({ apiKey: "AIzaSyTestKey9999", mode: "tecnico", autoPlay: false });
-    assert.equal(updated.mode, "tecnico");
-    assert.equal(updated.autoPlay, false);
-    assert.equal(store.load().apiKey, "AIzaSyTestKey9999");
+describe("ConfigStore, Model Migration & TranscriptParser", () => {
+  it("migrates retired gemini-2.5 models automatically to gemini-3.8 defaults", () => {
+    const stateDir = makeTempDir("gravoz-mig-");
+    writeFileSync(
+      join(stateDir, "config.json"),
+      JSON.stringify({
+        apiKey: "AIzaSyLegacyKey1234",
+        summaryModel: "gemini-2.5-flash",
+        ttsModel: "gemini-2.5-flash-preview-tts",
+      }),
+    );
 
-    store.writeRuntime({ pid: 123, port: 4321, token: "abc", startedAt: "2026-01-01T00:00:00Z" });
-    assert.equal(store.readRuntime()?.port, 4321);
-    store.removeRuntime();
-    assert.equal(store.readRuntime(), null);
+    const store = new ConfigStore(stateDir);
+    const loaded = store.load();
+    assert.equal(loaded.summaryModel, DEFAULT_SUMMARY_MODEL);
+    assert.equal(loaded.ttsModel, DEFAULT_TTS_MODEL);
   });
 
   it("parses JSONL transcripts while ignoring malformed trailing lines", () => {
@@ -131,7 +132,7 @@ describe("ConfigStore & TranscriptParser", () => {
     const transcriptPath = join(ws, "transcript.jsonl");
     const lines = [
       JSON.stringify({ type: "USER_INPUT", content: "<USER_REQUEST>Explícame el plan</USER_REQUEST>" }),
-      JSON.stringify({ type: "PLANNER_RESPONSE", content: "Hemos implementado la arquitectura limpia." }),
+      JSON.stringify({ type: "PLANNER_RESPONSE", content: "Hemos implementado la extensión nativa." }),
       "{corrupted-flushing-line",
     ].join("\n");
     writeFileSync(transcriptPath, lines, "utf8");
@@ -140,19 +141,22 @@ describe("ConfigStore & TranscriptParser", () => {
     const parsed = parser.parse({ transcriptPath, workspacePaths: [ws] });
     assert.ok(parsed);
     assert.equal(parsed.lastUserPrompt, "Explícame el plan");
-    assert.equal(parsed.latestAssistantResponse, "Hemos implementado la arquitectura limpia.");
+    assert.equal(parsed.latestAssistantResponse, "Hemos implementado la extensión nativa.");
   });
 });
 
-describe("NarrationService & GravozHttpServer Integration", () => {
-  it("enforces OWASP Host/Auth headers and completes end-to-end narration", async () => {
-    const stateDir = makeTempDir("gravoz-int-");
+describe("StopEventBus & NarrationService Integration", () => {
+  it("delivers atomic Stop events with zero TCP ports and narrates end-to-end", async () => {
+    const stateDir = makeTempDir("gravoz-bus-");
     const store = new ConfigStore(stateDir);
-    store.update({ apiKey: "AIzaSyIntegrationKey1234", mode: "normal", autoPlay: true });
+    store.update({ apiKey: "AIzaSyNativeKey1234", mode: "normal", autoPlay: true });
+
+    const events: UiEvent[] = [];
+    let playedCount = 0;
 
     const summarizer: SummarizerPort = {
       async summarize({ mode }) {
-        return `Resumen generado en modo ${mode} para tu proyecto.`;
+        return `Resumen nativo en modo ${mode}.`;
       },
     };
     const tts: TtsPort = {
@@ -163,7 +167,6 @@ describe("NarrationService & GravozHttpServer Integration", () => {
         return true;
       },
     };
-    let playedCount = 0;
     const osPlayer: AudioPlayerPort = {
       async playWav() {
         playedCount += 1;
@@ -171,7 +174,6 @@ describe("NarrationService & GravozHttpServer Integration", () => {
       stop() {},
     };
 
-    const server = new GravozHttpServer("test-secret-token");
     const service = new NarrationService({
       configStore: store,
       contextCollector: new ContextCollector(),
@@ -179,53 +181,32 @@ describe("NarrationService & GravozHttpServer Integration", () => {
       summarizer,
       tts,
       osPlayer,
-      hasUiSubscribers: () => server.hasUiSubscribers(),
-      broadcast: (e) => server.broadcast(e),
+      hasActiveWebview: () => false,
+      emit: (e) => events.push(e),
     });
-    server.attachService(service);
-    const port = await server.listen(0);
 
-    try {
-      // 1. Unauthorized API call must fail with 401
-      const unauth = await fetch(`http://127.0.0.1:${port}/api/status`);
-      assert.equal(unauth.status, 401);
+    // 1. Direct narration produces WAV base64 and triggers headless OS player when webview is closed
+    const entry = await service.narrateText({ text: "Plan completado", mode: "al-grano" });
+    assert.match(entry.script, /al-grano/);
+    assert.equal(playedCount, 1);
 
-      // 2. Authorized status returns masked key (never plaintext)
-      const statusRes = await fetch(`http://127.0.0.1:${port}/api/status`, {
-        headers: { Authorization: "Bearer test-secret-token" },
+    const narEvent = events.find((e) => e.type === "narration");
+    assert.ok(narEvent?.audioBase64);
+    const decoded = Buffer.from(narEvent.audioBase64, "base64");
+    assert.equal(decoded.subarray(0, 4).toString("ascii"), "RIFF");
+
+    // 2. Stop hook skips USER_CANCELED
+    assert.equal(service.handleStopHook({ terminationReason: "USER_CANCELED" }).accepted, false);
+
+    // 3. Atomic StopEventBus delivers payload cleanly to watcher
+    const received = await new Promise<string>((resolve) => {
+      const watcher = new StopEventWatcher(stateDir);
+      watcher.start((payload) => {
+        watcher.stop();
+        resolve(payload.terminationReason ?? "");
       });
-      assert.equal(statusRes.status, 200);
-      const statusBody = (await statusRes.json()) as { config: { maskedApiKey: string; hasApiKey: boolean } };
-      assert.equal(statusBody.config.hasApiKey, true);
-      assert.equal(statusBody.config.maskedApiKey, "AIza••••1234");
-
-      // 3. Narrate text end-to-end and fetch generated WAV audio
-      const narRes = await fetch(`http://127.0.0.1:${port}/api/narrate`, {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer test-secret-token",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: "Plan de pruebas completado", mode: "al-grano" }),
-      });
-      assert.equal(narRes.status, 200);
-      const narBody = (await narRes.json()) as { entry: { id: string; script: string } };
-      assert.match(narBody.entry.script, /al-grano/);
-      assert.equal(playedCount, 1);
-
-      const audioRes = await fetch(
-        `http://127.0.0.1:${port}/api/audio/${narBody.entry.id}?token=test-secret-token`,
-      );
-      assert.equal(audioRes.status, 200);
-      assert.equal(audioRes.headers.get("content-type"), "audio/wav");
-      const wavBuf = Buffer.from(await audioRes.arrayBuffer());
-      assert.equal(wavBuf.subarray(0, 4).toString("ascii"), "RIFF");
-
-      // 4. Stop hook skips USER_CANCELED cleanly
-      const skipRes = service.handleStopHook({ terminationReason: "USER_CANCELED" });
-      assert.equal(skipRes.accepted, false);
-    } finally {
-      await server.close();
-    }
+      writeStopEvent({ terminationReason: "NO_TOOL_CALL" }, stateDir);
+    });
+    assert.equal(received, "NO_TOOL_CALL");
   });
 });

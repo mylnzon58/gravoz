@@ -1,8 +1,9 @@
 {
   "name": "gravoz",
+  "displayName": "Gravoz — Voz Gemini para Antigravity",
+  "description": "Reproductor nativo de voz inteligente en español para Google Antigravity IDE con Gemini 3.8 Flash TTS en 3 niveles (Al grano, Normal, Técnico).",
   "version": "1.0.0",
-  "description": "Context-aware Spanish voice narrator plugin for Google Antigravity powered by Gemini TTS.",
-  "type": "module",
+  "publisher": "mylnzon58",
   "license": "MIT",
   "author": {
     "name": "mylnzon58",
@@ -13,18 +14,80 @@
     "url": "https://github.com/mylnzon58/gravoz.git"
   },
   "homepage": "https://mylnzon58.github.io/gravoz/",
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "antigravity",
+    "gemini",
+    "tts",
+    "voice",
+    "spanish",
+    "narrator"
+  ],
   "engines": {
+    "vscode": "^1.85.0",
     "node": ">=20.0.0"
   },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gravoz",
+          "title": "Gravoz",
+          "icon": "assets/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "gravoz": [
+        {
+          "type": "webview",
+          "id": "gravoz.playerView",
+          "name": "Reproductor"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "gravoz.configureApiKey",
+        "title": "Gravoz: Configurar API Key de Google AI Studio"
+      },
+      {
+        "command": "gravoz.selectMode",
+        "title": "Gravoz: Cambiar nivel (Al grano / Normal / Técnico)"
+      },
+      {
+        "command": "gravoz.toggleAutoPlay",
+        "title": "Gravoz: Activar / Desactivar auto-reproducción"
+      },
+      {
+        "command": "gravoz.narrateSelection",
+        "title": "Gravoz: Narrar texto seleccionado"
+      },
+      {
+        "command": "gravoz.stopPlayback",
+        "title": "Gravoz: Detener reproducción"
+      }
+    ]
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/copy-ui.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test dist/tests/*.test.js",
-    "start": "node dist/src/interfaces/sidecar-main.js"
+    "build": "node scripts/build.mjs",
+    "package": "npm run build && vsce package --allow-missing-repository",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/*.test.js"
   },
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.0",
     "typescript": "^5.7.0"
   }
 }

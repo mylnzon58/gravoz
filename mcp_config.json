@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "gravoz-voice": {
-      "command": "node",
-      "args": ["dist/src/interfaces/mcp-server.js"]
-    }
-  }
-}

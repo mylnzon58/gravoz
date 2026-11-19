@@ -3,7 +3,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "node dist/src/interfaces/stop-hook.js",
+        "command": "node dist/stop-hook.js",
         "timeout": 5
       }
     ]

@@ -60,3 +60,4 @@ export function isAllowedAntigravityPath(
   const allowedRoots = [geminiRoot, ...workspacePaths];
   return allowedRoots.some((root) => root.length > 0 && isPathWithinRoot(candidatePath, root));
 }
+

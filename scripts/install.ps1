@@ -1,27 +1,25 @@
-﻿# Windows PowerShell installer — installs Gravoz into $HOME\.gemini\config\plugins\gravoz
+﻿# Windows PowerShell installer — builds and installs Gravoz natively into Antigravity IDE.
 $ErrorActionPreference = "Stop"
 
 $RepoDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$TargetDir = Join-Path $HOME ".gemini\config\plugins\gravoz"
-
-Write-Host "[gravoz] Compilando TypeScript..."
 Push-Location $RepoDir
 try {
+  Write-Host "[gravoz] Compilando y empaquetando extensión nativa (.vsix)..."
   npm install --no-audit --no-fund
-  npm run build
+  npm run package
 
-  Write-Host "[gravoz] Instalando plugin en $TargetDir..."
-  if (Test-Path $TargetDir) {
-    Remove-Item -Recurse -Force $TargetDir
+  $Vsix = Get-ChildItem -Path $RepoDir -Filter "gravoz-*.vsix" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  if (Get-Command antigravity-ide -ErrorAction SilentlyContinue) {
+    antigravity-ide --install-extension $Vsix.FullName --force
+  } elseif (Get-Command antigravity -ErrorAction SilentlyContinue) {
+    antigravity --install-extension $Vsix.FullName --force
+  } else {
+    Write-Host "[gravoz] Paquete listo en: $($Vsix.FullName)"
+    Write-Host "[gravoz] Instálalo en Antigravity IDE: Extensiones (...) -> Install from VSIX."
+    exit 0
   }
-  New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
 
-  $Items = @("plugin.json", "hooks.json", "mcp_config.json", "LICENSE", "README.md", "assets", "sidecars", "skills", "dist")
-  foreach ($Item in $Items) {
-    Copy-Item -Recurse -Force (Join-Path $RepoDir $Item) (Join-Path $TargetDir $Item)
-  }
-
-  Write-Host "[gravoz] Listo. Abre el panel lateral de Gravoz en Antigravity para configurar tu API key de Google AI Studio."
+  Write-Host "[gravoz] Extensión instalada. Recarga la ventana de Antigravity IDE para ver el icono de Gravoz en la barra lateral."
 } finally {
   Pop-Location
 }

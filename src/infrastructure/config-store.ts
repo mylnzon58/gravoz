@@ -1,20 +1,22 @@
 /**
- * Atomic, permission-hardened store for Gravoz configuration and sidecar runtime state.
- * Almacén atómico y seguro para la configuración de Gravoz y el estado runtime del sidecar.
+ * Atomic, permission-hardened store for Gravoz user configuration.
+ * Almacén atómico y seguro para la configuración local de Gravoz.
  */
-import { chmodSync, existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   DEFAULT_CONFIG,
+  DEFAULT_SUMMARY_MODEL,
+  DEFAULT_TTS_MODEL,
   isGeminiVoice,
   isNarrationMode,
   type GravozConfig,
-  type RuntimeDescriptor,
 } from "../domain/types.js";
 import { ensurePrivateDir, resolveStateDir } from "./paths.js";
 
 const CONFIG_FILE = "config.json";
-const RUNTIME_FILE = "runtime.json";
+const RETIRED_SUMMARY_MODELS = new Set(["gemini-2.5-flash", "gemini-2.0-flash"]);
+const RETIRED_TTS_MODELS = new Set(["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]);
 
 function writeFileAtomicPrivate(filePath: string, payload: string): void {
   const tmpPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
@@ -30,23 +32,20 @@ function clampPlaybackRate(value: unknown, fallback: number): number {
   return Math.min(2.0, Math.max(0.75, Math.round(value * 100) / 100));
 }
 
-function sanitizeModelId(value: unknown, fallback: string): string {
+function sanitizeModelId(value: unknown, fallback: string, retired: ReadonlySet<string>): string {
   if (typeof value !== "string") return fallback;
   const trimmed = value.trim();
-  // Restrict to safe model identifier characters (OWASP A03).
-  // Restringe a caracteres seguros de identificador de modelo.
+  if (retired.has(trimmed)) return fallback;
   return /^[a-zA-Z0-9._-]{3,80}$/.test(trimmed) ? trimmed : fallback;
 }
 
 export class ConfigStore {
   private readonly stateDir: string;
   private readonly configPath: string;
-  private readonly runtimePath: string;
 
   constructor(stateDir: string = resolveStateDir()) {
     this.stateDir = ensurePrivateDir(stateDir);
     this.configPath = join(this.stateDir, CONFIG_FILE);
-    this.runtimePath = join(this.stateDir, RUNTIME_FILE);
   }
 
   public getStateDir(): string {
@@ -73,8 +72,8 @@ export class ConfigStore {
             : DEFAULT_CONFIG.headlessFallback,
         voiceName: isGeminiVoice(rec["voiceName"]) ? rec["voiceName"] : DEFAULT_CONFIG.voiceName,
         playbackRate: clampPlaybackRate(rec["playbackRate"], DEFAULT_CONFIG.playbackRate),
-        summaryModel: sanitizeModelId(rec["summaryModel"], DEFAULT_CONFIG.summaryModel),
-        ttsModel: sanitizeModelId(rec["ttsModel"], DEFAULT_CONFIG.ttsModel),
+        summaryModel: sanitizeModelId(rec["summaryModel"], DEFAULT_SUMMARY_MODEL, RETIRED_SUMMARY_MODELS),
+        ttsModel: sanitizeModelId(rec["ttsModel"], DEFAULT_TTS_MODEL, RETIRED_TTS_MODELS),
       };
     } catch {
       return { ...DEFAULT_CONFIG };
@@ -93,52 +92,12 @@ export class ConfigStore {
           : current.headlessFallback,
       voiceName: isGeminiVoice(patch.voiceName) ? patch.voiceName : current.voiceName,
       playbackRate: clampPlaybackRate(patch.playbackRate, current.playbackRate),
-      summaryModel: sanitizeModelId(patch.summaryModel, current.summaryModel),
-      ttsModel: sanitizeModelId(patch.ttsModel, current.ttsModel),
+      summaryModel: sanitizeModelId(patch.summaryModel, current.summaryModel, RETIRED_SUMMARY_MODELS),
+      ttsModel: sanitizeModelId(patch.ttsModel, current.ttsModel, RETIRED_TTS_MODELS),
     };
 
     ensurePrivateDir(this.stateDir);
     writeFileAtomicPrivate(this.configPath, `${JSON.stringify(next, null, 2)}\n`);
     return next;
-  }
-
-  public writeRuntime(descriptor: RuntimeDescriptor): void {
-    ensurePrivateDir(this.stateDir);
-    writeFileAtomicPrivate(this.runtimePath, `${JSON.stringify(descriptor)}\n`);
-  }
-
-  public readRuntime(): RuntimeDescriptor | null {
-    if (!existsSync(this.runtimePath)) return null;
-    try {
-      const parsed: unknown = JSON.parse(readFileSync(this.runtimePath, "utf8"));
-      if (typeof parsed !== "object" || parsed === null) return null;
-      const rec = parsed as Record<string, unknown>;
-      if (
-        typeof rec["pid"] !== "number" ||
-        typeof rec["port"] !== "number" ||
-        typeof rec["token"] !== "string" ||
-        typeof rec["startedAt"] !== "string"
-      ) {
-        return null;
-      }
-      return {
-        pid: rec["pid"],
-        port: rec["port"],
-        token: rec["token"],
-        startedAt: rec["startedAt"],
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  public removeRuntime(): void {
-    try {
-      if (existsSync(this.runtimePath)) {
-        unlinkSync(this.runtimePath);
-      }
-    } catch {
-      // Ignore cleanup race on shutdown.
-    }
   }
 }

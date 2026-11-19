@@ -61,7 +61,7 @@
             </div>
 
             <p id="demo-script" class="script-output">
-              Se terminó de estructurar el servidor local de Gravoz en el puerto de loopback y se validó la codificación WAV en memoria para evitar dependencias externas. El siguiente paso es instalar el paquete en tu carpeta de plugins y pegar tu clave gratuita de Google AI Studio.
+              La extensión nativa de Gravoz ya está integrada en la barra lateral de Antigravity IDE sin puertos abiertos ni dependencias externas. Solo queda pegar tu clave gratuita de Google AI Studio para escuchar cada plan con Gemini 3.8 Flash TTS.
             </p>
 
             <div class="console-foot">
@@ -118,24 +118,24 @@ cd gravoz
 
           <div class="ledger">
             <div class="ledger-row">
-              <div class="ledger-key">Disparo automático no bloqueante</div>
-              <p class="ledger-val">El hook Stop de Antigravity reenvía el evento al sidecar local y libera al agente en menos de 50 milisegundos.</p>
+              <div class="ledger-key">Extensión nativa dentro del IDE</div>
+              <p class="ledger-val">Icono en la barra lateral, reproductor integrado con los colores nativos de Antigravity IDE, botón en la barra de estado y comandos de paleta.</p>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Disparo automático sin puertos TCP</div>
+              <p class="ledger-val">El hook Stop escribe un evento atómico privado en menos de 10 milisegundos y libera al agente sin levantar servidores HTTP locales.</p>
             </div>
             <div class="ledger-row">
               <div class="ledger-key">Contexto real del proyecto</div>
-              <p class="ledger-val">Lee README, manifiestos, árbol raíz, artefactos de plan y la cola reciente de la transcripción JSONL antes de redactar el guion oral.</p>
+              <p class="ledger-val">Lee README, manifiestos, árbol raíz, artefactos de plan y la cola reciente de la transcripción JSONL antes de redactar el guion oral con Gemini 3.8 Flash.</p>
             </div>
             <div class="ledger-row">
-              <div class="ledger-key">Audio nativo de Gemini sin ffmpeg</div>
-              <p class="ledger-val">Convierte la salida PCM de 24 kHz de gemini-2.5-flash-preview-tts a WAV estándar con una cabecera RIFF en TypeScript puro.</p>
+              <div class="ledger-key">Audio nativo de Gemini 3.8 sin ffmpeg</div>
+              <p class="ledger-val">Convierte la salida PCM de 24 kHz de gemini-3.8-flash-tts a WAV estándar con una cabecera RIFF en TypeScript puro.</p>
             </div>
             <div class="ledger-row">
               <div class="ledger-key">Seguridad local OWASP</div>
-              <p class="ledger-val">Servidor enlazado solo a 127.0.0.1, validación de Host y Origin contra DNS rebinding, token criptográfico por sesión y clave API guardada con permisos 0600.</p>
-            </div>
-            <div class="ledger-row">
-              <div class="ledger-key">Clave gratuita guiada</div>
-              <p class="ledger-val">Al abrir el panel lateral por primera vez, una guía de 3 pasos te ayuda a crear y verificar tu clave gratuita en Google AI Studio.</p>
+              <p class="ledger-val">Cero dependencias en producción, validación anti path-traversal con realpathSync, CSP estricta con nonce y clave API guardada con permisos 0600.</p>
             </div>
           </div>
         </div>
@@ -156,3 +156,4 @@ cd gravoz
     <script src="./site.js" defer></script>
   </body>
 </html>
+

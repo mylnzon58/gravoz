@@ -11,12 +11,12 @@
     },
     normal: {
       script:
-        "Se terminó de estructurar el servidor local de Gravoz en el puerto de loopback y se validó la codificación WAV en memoria para evitar dependencias externas. El siguiente paso es instalar el paquete en tu carpeta de plugins y pegar tu clave gratuita de Google AI Studio.",
+        "La extensión nativa de Gravoz ya está integrada en la barra lateral de Antigravity IDE sin puertos abiertos ni dependencias externas. Solo queda pegar tu clave gratuita de Google AI Studio para escuchar cada plan con Gemini 3.8 Flash TTS.",
       meta: "modo normal / voz Kore / 45 a 80 segundos",
     },
     tecnico: {
       script:
-        "La arquitectura separa el dominio, la infraestructura y la capa de interfaces mediante puertos estrechos. El hook Stop reenvía la ruta de transcripción a 127.0.0.1 con autenticación Bearer por sesión, el lector toma los últimos doscientos cincuenta y seis kilobytes del archivo JSONL con validación realpathSync contra path traversal, y un codificador RIFF envuelve el flujo PCM a veinticuatro kilohercios de Gemini TTS.",
+        "La arquitectura separa dominio, infraestructura e interfaces mediante puertos estrechos. El hook Stop escribe un evento atómico en disco sin abrir puertos TCP, el lector toma la cola de doscientos cincuenta y seis kilobytes del archivo JSONL con validación realpathSync, Gemini tres punto ocho genera el guion y el audio PCM a veinticuatro kilohercios, y un codificador RIFF lo envía directo al panel nativo del IDE.",
       meta: "modo técnico / voz Kore / 90 a 150 segundos",
     },
   };
@@ -57,3 +57,4 @@
     });
   }
 })();
+

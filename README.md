@@ -1,8 +1,8 @@
 # Gravoz
 
-**Reproductor de voz inteligente y minimalista para Google Antigravity.**
+**Extensión nativa de voz inteligente en español para Google Antigravity IDE.**
 
-Gravoz escucha cuándo Antigravity termina un plan o una respuesta, lee el contexto real de tu proyecto y el hilo de la conversación, y lo narra en español natural usando la voz nativa de **Google Gemini** (`gemini-2.5-flash-preview-tts`).
+Gravoz vive directamente dentro de la barra lateral y la barra de estado de **Antigravity IDE** (sin servidores web externos ni puertos abiertos). Cuando Antigravity termina un plan o una respuesta, Gravoz lee el contexto real de tu proyecto y el hilo de la conversación, y lo narra en español natural usando **Gemini 3.8 Flash** + **Gemini 3.8 Flash TTS**.
 
 No es un lector de pantalla robótico: interpreta lo que se construyó o decidió y te lo explica en **3 niveles de profundidad**:
 
@@ -12,7 +12,7 @@ No es un lector de pantalla robótico: interpreta lo que se construyó o decidi�
 
 ---
 
-## Instalación rápida
+## Instalación rápida (extensión nativa `.vsix`)
 
 Requiere **Node.js 20+** y una API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -32,37 +32,31 @@ cd gravoz
 .\scripts\install.ps1
 ```
 
-Al abrir el panel lateral de **Gravoz** en Antigravity, una guía de 3 pasos te pedirá pegar tu clave gratuita de Google AI Studio y la verificará al instante.
+Recarga la ventana de Antigravity IDE (`Ctrl+Shift+P` → `Developer: Reload Window`). Verás el **icono de Gravoz** en la barra lateral izquierda y el botón **Gravoz: Normal** en la barra de estado inferior. Al abrirlo, pega tu clave gratuita de Google AI Studio en la tarjeta guiada de 3 pasos.
 
 ---
 
-## ¿Por qué necesita una API key de Google AI Studio?
-
-El núcleo de Google Antigravity es propietario y aísla la sesión de tu cuenta Google de los plugins locales. Por seguridad (y siguiendo buenas prácticas OWASP), Gravoz nunca intenta leer ni reutilizar tokens internos de Antigravity. En su lugar, utiliza tu propia clave de **Google AI Studio** (que ofrece nivel gratuito) almacenada localmente con permisos privados (`0600` en Linux/macOS y `%LOCALAPPDATA%\gravoz` en Windows).
-
----
-
-## Arquitectura
+## Arquitectura (0 puertos TCP, 0 dependencias en producción)
 
 ```text
-Antigravity (Stop Hook < 50ms)
+Antigravity (Hook Stop < 10ms)
         │
-        ▼  127.0.0.1 + Bearer token por sesión
-Sidecar Local (Node.js ESM, 0 dependencias en producción)
+        ▼  Escritura atómica en ~/.gravoz/stop-event.json (0600, sin HTTP)
+Extensión Nativa de Antigravity IDE (dist/extension.js)
   ├── ContextCollector   → README, manifiestos, árbol raíz y artefactos recientes
   ├── TranscriptParser   → Lectura incremental por cola de transcript.jsonl
-  ├── GeminiClient       → Guion oral en español + Voz nativa PCM 24kHz
+  ├── GeminiClient       → Guion oral (gemini-3.8-flash) + Voz (gemini-3.8-flash-tts)
   ├── WavEncoder         → Cabecera RIFF/WAVE en TypeScript puro (sin ffmpeg)
-  ├── Aux Pane UI        → Panel minimalista Lean UX con SSE e historial
-  └── OsAudioPlayer      → Respaldo nativo opcional (paplay/aplay, afplay, PowerShell)
+  ├── Panel Lateral IDE  → Webview nativo con tokens --vscode-* e historial
+  └── OsAudioPlayer      → Respaldo opcional si el panel está cerrado (paplay/aplay, afplay, PowerShell)
 ```
 
-### Decisiones de ingeniería
+### Decisiones de ingeniería y seguridad OWASP
 
-- **Cero dependencias de runtime** (`dependencies: {}`): menor superficie de ataque y arranque inmediato en Linux, macOS y Windows.
+- **Cero dependencias de runtime** (`dependencies: {}`) y **cero puertos TCP abiertos** (sin superficie de DNS-rebinding ni CSRF local).
 - **TypeScript estricto**: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`.
-- **Seguridad OWASP**: servidor enlazado solo a `127.0.0.1`, validación estricta de `Host` y `Origin` (anti DNS-rebinding / CSRF), token criptográfico por sesión con `timingSafeEqual`, API key enviada solo por cabecera HTTPS (`x-goog-api-key`), validación anti path-traversal con `realpathSync` y cero interpolación de shell (`execFile`).
-- **Cancelación determinista**: si llega una nueva respuesta mientras Gemini sintetiza, se cancela la solicitud anterior (`AbortController`) y se evita audio superpuesto.
+- **Seguridad OWASP**: API key enviada solo por cabecera HTTPS (`x-goog-api-key`), guardada en local con permisos `0600` (o `%LOCALAPPDATA%\gravoz` en Windows), validación anti path-traversal con `realpathSync`, delimitadores anti prompt-injection y ejecución sin shell (`execFile`).
+- **Cancelación determinista**: si llega una nueva respuesta mientras Gemini sintetiza, `AbortController` cancela el turno anterior y evita audio superpuesto.
 
 ---
 
@@ -72,6 +66,7 @@ Sidecar Local (Node.js ESM, 0 dependencias en producción)
 npm install
 npm run typecheck
 npm test
+npm run package
 ```
 
 ## Licencia y créditos
