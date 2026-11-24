@@ -1,7 +1,7 @@
-/* Gravoz AI — design tokens */
+/* Gravoz AI — design tokens (Light default + OLED Pure Dark) */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --space-xs: 8px;
   --space-sm: 12px;
   --space-md: 16px;
@@ -18,28 +18,44 @@
   --text-section: clamp(1.75rem, 2.2vw + 0.9rem, 2.75rem);
   --text-display: clamp(2.35rem, 4.2vw + 0.8rem, 4.1rem);
 
-  --color-paper: oklch(16.5% 0.008 250);
-  --color-paper-2: oklch(20.5% 0.009 250);
-  --color-paper-3: oklch(13% 0.007 250);
-  --color-ink: oklch(95% 0.005 250);
-  --color-ink-2: oklch(82% 0.008 250);
-  --color-muted: oklch(69% 0.01 250);
-  --color-rule: oklch(30% 0.01 250);
-  --color-rule-2: oklch(42% 0.012 250);
-  --color-accent: oklch(82% 0.15 80);
-  --color-accent-ink: oklch(17% 0.04 75);
-  --color-accent-soft: oklch(27% 0.045 80);
-  --color-cool: oklch(77% 0.12 245);
-  --color-focus: oklch(82% 0.15 80);
+  --color-paper: #F5F5F7;
+  --color-paper-2: #FFFFFF;
+  --color-paper-3: #EFEFF3;
+  --color-ink: #1D1D1F;
+  --color-ink-2: #48484A;
+  --color-muted: #6E6E73;
+  --color-rule: #E5E5EA;
+  --color-rule-2: #D1D1D6;
+  --color-accent: #007AFF;
+  --color-accent-ink: #FFFFFF;
+  --color-accent-soft: rgba(0, 122, 255, 0.12);
+  --color-cool: #007AFF;
+  --color-focus: #007AFF;
 
   --font-display: "Host Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-body: var(--font-display);
   --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --radius-card: 10px;
-  --radius-pill: 6px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
   --container: 1160px;
-  --dur-micro: 120ms;
+  --dur-micro: 140ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #000000;
+  --color-paper-2: #1C1C1E;
+  --color-paper-3: #121214;
+  --color-ink: #F5F5F7;
+  --color-ink-2: #D1D1D6;
+  --color-muted: #98989D;
+  --color-rule: #2C2C2E;
+  --color-rule-2: #3A3A3C;
+  --color-accent: #0A84FF;
+  --color-accent-ink: #FFFFFF;
+  --color-accent-soft: rgba(10, 132, 255, 0.16);
+  --color-cool: #0A84FF;
+  --color-focus: #0A84FF;
+}

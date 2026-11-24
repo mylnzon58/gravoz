@@ -3,6 +3,22 @@
  * Vista previa interactiva de los 3 modos y botones de copia para la página de Gravoz.
  */
 (() => {
+  const themeBtn = document.getElementById("themeToggle");
+  const applyTheme = (theme) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    if (themeBtn) {
+      themeBtn.textContent = theme === "dark" ? "Modo Claro" : "OLED Oscuro";
+    }
+  };
+  applyTheme(localStorage.getItem("gravoz_theme") === "dark" ? "dark" : "light");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      localStorage.setItem("gravoz_theme", next);
+      applyTheme(next);
+    });
+  }
+
   const DEMOS = {
     "al-grano": {
       script:

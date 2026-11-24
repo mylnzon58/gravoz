@@ -69,15 +69,31 @@ a {
   align-items: center;
   gap: var(--space-lg);
   font-size: var(--text-sm);
+  flex-wrap: wrap;
 }
 
 .nav-links a {
   color: var(--color-muted);
+  white-space: nowrap;
   transition: color var(--dur-micro) var(--ease-out);
 }
 
 .nav-links a:hover {
   color: var(--color-ink);
+}
+
+.theme-btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-rule-2);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* Hero */
